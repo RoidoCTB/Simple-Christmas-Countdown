@@ -39,7 +39,7 @@
   <nav class="navbar navbar-dark glass sticky-top">
     <div class="container py-2">
       <span class="navbar-brand fw-bold">Paskong Pinoy Countdown</span>
-      <span class="badge badge-ber rounded-pill px-3 py-2">BER vibes on the way ✨</span>
+      <span class="badge badge-ber rounded-pill px-3 py-2">🎄 Christmas vibes are here ✨</span>
     </div>
   </nav>
 
@@ -52,23 +52,8 @@
     </div>
 
     <div class="row g-4">
-      <!-- Ber Months -->
-      <div class="col-12 col-lg-4">
-        <div class="card glass h-100 shadow-lg">
-          <div class="card-body text-center p-4">
-            <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
-              <span class="badge bg-success">Ber Months</span>
-              <small id="ber-year" class="text-secondary"></small>
-            </div>
-            <div id="ber-count" class="count-value">—</div>
-            <div class="count-label">to September 1</div>
-            <div id="ber-sub" class="mt-3 text-secondary small"></div>
-          </div>
-        </div>
-      </div>
-
       <!-- Christmas Day -->
-      <div class="col-12 col-lg-4">
+      <div class="col-12 col-lg-6">
         <div class="card glass h-100 shadow-lg">
           <div class="card-body text-center p-4">
             <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
@@ -83,7 +68,7 @@
       </div>
 
       <!-- New Year -->
-      <div class="col-12 col-lg-4">
+      <div class="col-12 col-lg-6">
         <div class="card glass h-100 shadow-lg">
           <div class="card-body text-center p-4">
             <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
@@ -160,41 +145,32 @@
       const now = nowInTZ(TZ);
       const y = now.getFullYear();
 
-      // September 1 (current year or next if already past)
-      let ber = inTZ(TZ, y, 9, 1, 0, 0, 0);
-      if (now > ber) ber = inTZ(TZ, y+1, 9, 1, 0, 0, 0);
-
       // December 25 (current year or next if already past)
       let xmas = inTZ(TZ, y, 12, 25, 0, 0, 0);
       if (now > xmas) xmas = inTZ(TZ, y+1, 12, 25, 0, 0, 0);
 
       // January 1 (next Jan 1 from now)
       let ny = inTZ(TZ, y+1, 1, 1, 0, 0, 0);
-      // if we're before Jan 1 of current year, aim at that one
       const jan1ThisYear = inTZ(TZ, y, 1, 1, 0, 0, 0);
-      if (now < jan1ThisYear) ny = jan1ThisYear; // handles late December dates
+      if (now < jan1ThisYear) ny = jan1ThisYear;
 
-      return { now, ber, xmas, ny };
+      return { now, xmas, ny };
     }
 
     function update() {
-      const { now, ber, xmas, ny } = targets();
+      const { now, xmas, ny } = targets();
 
       // Years labels
-      document.getElementById('ber-year').textContent = `(${ber.getFullYear()})`;
       document.getElementById('xmas-year').textContent = `(${xmas.getFullYear()})`;
       document.getElementById('ny-year').textContent = `(${ny.getFullYear()})`;
 
       // Diffs
-      const dBer = diffBreakdown(ber - now);
       const dXmas = diffBreakdown(xmas - now);
       const dNY = diffBreakdown(ny - now);
 
-      document.getElementById('ber-count').textContent = fmt(dBer);
       document.getElementById('xmas-count').textContent = fmt(dXmas);
       document.getElementById('ny-count').textContent = fmt(dNY);
 
-      document.getElementById('ber-sub').textContent = subText(dBer);
       document.getElementById('xmas-sub').textContent = subText(dXmas);
       document.getElementById('ny-sub').textContent = subText(dNY);
     }
@@ -204,3 +180,5 @@
   </script>
 </body>
 </html>
+
+
