@@ -8,14 +8,14 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     :root {
-      --bg: #0f172a; /* slate-900 */
-      --card: #111827; /* gray-900 */
-      --accent: #16a34a; /* green-600 */
-      --accent-2: #dc2626; /* red-600 */
-      --text: #e5e7eb; /* gray-200 */
-      --muted: #9ca3af; /* gray-400 */
+      --bg: #0f172a;
+      --card: #111827;
+      --accent: #16a34a;
+      --accent-2: #dc2626;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
     }
-    body { background: radial-gradient(1200px 700px at 70% -10%, #1f2937, #0b1225 60%, #050816); color: var(--text); }
+    body { background: radial-gradient(1200px 700px at 70% -10%, #1f2937, #0b1225 60%, #050816); color: var(--text); overflow-x: hidden; }
     .glass {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.08);
@@ -23,13 +23,48 @@
     .count-value { font-size: clamp(2.25rem, 5vw, 4rem); font-weight: 800; letter-spacing: 0.5px; }
     .count-label { color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px; }
     .badge-ber { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
-    .parol {
-      position: absolute; right: 1rem; top: 0.25rem; font-size: 1.5rem; opacity: .8;
-      filter: drop-shadow(0 0 6px rgba(255,255,255,.25));
-    }
+    .parol { position: absolute; right: 1rem; top: 0.25rem; font-size: 1.5rem; opacity: .8; filter: drop-shadow(0 0 6px rgba(255,255,255,.25)); }
     .twinkle { position: fixed; pointer-events: none; inset: 0; overflow: hidden; z-index: 0; }
     .twinkle span { position: absolute; width: 2px; height: 2px; background: #fff; opacity: .7; border-radius: 50%; animation: twinkle 6s infinite ease-in-out; }
     @keyframes twinkle { 0%,100%{opacity:.15; transform: scale(.8)} 50%{opacity:.9; transform: scale(1.3)} }
+
+    /* Snowflakes ❄️ */
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: #fff;
+      font-size: 1em;
+      user-select: none;
+      pointer-events: none;
+      animation: fall linear infinite;
+      z-index: 2;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-10px); opacity: 1; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
+
+    /* Fireworks container 🎆 */
+    #fireworks {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+    }
+    #greeting {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 3rem;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 0 15px #ff0, 0 0 25px #f00;
+      z-index: 1001;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -37,9 +72,12 @@
   <div class="twinkle" aria-hidden="true"></div>
 
   <nav class="navbar navbar-dark glass sticky-top">
-    <div class="container py-2">
+    <div class="container py-2 d-flex justify-content-between align-items-center">
       <span class="navbar-brand fw-bold">Paskong Pinoy Countdown</span>
-      <span class="badge badge-ber rounded-pill px-3 py-2">🎄 Christmas vibes are here ✨</span>
+      <div>
+        <button id="music-toggle" class="btn btn-sm btn-outline-light me-2">🎵 Play Music</button>
+        <span class="badge badge-ber rounded-pill px-3 py-2">🎄 Christmas vibes are here ✨</span>
+      </div>
     </div>
   </nav>
 
@@ -84,23 +122,28 @@
     </div>
   </main>
 
-  <!-- Bootstrap JS -->
+  <!-- Fireworks + Greeting -->
+  <canvas id="fireworks"></canvas>
+  <div id="greeting">🎉 Maligayang Pasko! 🎉</div>
+
+  <!-- Music -->
+  <audio id="bg-music" loop>
+  <source src="assets/christmas.mp3" type="audio/mpeg">
+</audio>
+
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Utility: get a Date representing NOW in a specific IANA time zone by parsing a localized string
+    // Utility: Manila time
     function nowInTZ(tz) {
       const str = new Date().toLocaleString('en-US', { timeZone: tz });
       return new Date(str);
     }
-
-    // Create a Date in target IANA TZ at specific Y-M-D h:m:s
-    function inTZ(tz, y, m /*1-12*/, d, hh=0, mm=0, ss=0) {
+    function inTZ(tz, y, m, d, hh=0, mm=0, ss=0) {
       const str = new Date(y, m-1, d, hh, mm, ss).toLocaleString('en-US', { timeZone: tz });
       return new Date(str);
     }
-
     function pad(n){ return String(n).padStart(2,'0'); }
-
     function diffBreakdown(ms) {
       const totalSeconds = Math.max(0, Math.floor(ms / 1000));
       const days = Math.floor(totalSeconds / 86400);
@@ -109,13 +152,10 @@
       const seconds = totalSeconds % 60;
       return { days, hours, minutes, seconds };
     }
-
     function fmt({days, hours, minutes, seconds}) {
       return `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
     }
-
     function plural(n, w){ return n === 1 ? w : w + 's'; }
-
     function subText({days, hours, minutes, seconds}){
       const parts = [];
       if (days) parts.push(`${days} ${plural(days,'day')}`);
@@ -125,7 +165,7 @@
       return parts.join(', ') + ' left';
     }
 
-    // Generate some twinkles ✨
+    // Twinkles
     (function twinkles(){
       const wrap = document.querySelector('.twinkle');
       const N = 80;
@@ -139,46 +179,118 @@
       }
     })();
 
+    // Snowflakes ❄️
+    function createSnowflake() {
+      const snowflake = document.createElement('div');
+      snowflake.className = 'snowflake';
+      snowflake.textContent = '❄';
+      snowflake.style.left = Math.random() * 100 + 'vw';
+      snowflake.style.fontSize = Math.random() * 1.5 + 0.5 + 'em';
+      snowflake.style.animationDuration = (5 + Math.random() * 10) + 's';
+      document.body.appendChild(snowflake);
+      setTimeout(() => snowflake.remove(), 15000);
+    }
+    setInterval(createSnowflake, 300);
+
     const TZ = 'Asia/Manila';
+    let triggeredXmas = false, triggeredNY = false;
 
     function targets() {
       const now = nowInTZ(TZ);
       const y = now.getFullYear();
-
-      // December 25 (current year or next if already past)
       let xmas = inTZ(TZ, y, 12, 25, 0, 0, 0);
       if (now > xmas) xmas = inTZ(TZ, y+1, 12, 25, 0, 0, 0);
-
-      // January 1 (next Jan 1 from now)
       let ny = inTZ(TZ, y+1, 1, 1, 0, 0, 0);
       const jan1ThisYear = inTZ(TZ, y, 1, 1, 0, 0, 0);
       if (now < jan1ThisYear) ny = jan1ThisYear;
-
       return { now, xmas, ny };
     }
 
     function update() {
       const { now, xmas, ny } = targets();
-
-      // Years labels
       document.getElementById('xmas-year').textContent = `(${xmas.getFullYear()})`;
       document.getElementById('ny-year').textContent = `(${ny.getFullYear()})`;
-
-      // Diffs
       const dXmas = diffBreakdown(xmas - now);
       const dNY = diffBreakdown(ny - now);
-
       document.getElementById('xmas-count').textContent = fmt(dXmas);
       document.getElementById('ny-count').textContent = fmt(dNY);
-
       document.getElementById('xmas-sub').textContent = subText(dXmas);
       document.getElementById('ny-sub').textContent = subText(dNY);
-    }
 
+      // 🎉 Trigger greeting + fireworks
+      if (dXmas.days===0 && dXmas.hours===0 && dXmas.minutes===0 && dXmas.seconds===0 && !triggeredXmas) {
+        triggeredXmas = true;
+        launchCelebration("🎄 Maligayang Pasko! 🎄");
+      }
+      if (dNY.days===0 && dNY.hours===0 && dNY.minutes===0 && dNY.seconds===0 && !triggeredNY) {
+        triggeredNY = true;
+        launchCelebration("🎆 Happy New Year! 🎆");
+      }
+    }
     update();
     setInterval(update, 1000);
+
+    // Music 🎵
+    const music = document.getElementById('bg-music');
+    const bell = document.getElementById('bell');
+    document.getElementById('music-toggle').addEventListener('click', () => {
+      if (music.paused) {
+        music.play();
+        document.getElementById('music-toggle').textContent = "⏸ Pause Music";
+      } else {
+        music.pause();
+        document.getElementById('music-toggle').textContent = "🎵 Play Music";
+      }
+    });
+
+    // Fireworks 🎆
+    const canvas = document.getElementById('fireworks');
+    const ctx = canvas.getContext('2d');
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let particles = [];
+    function launchCelebration(message) {
+      document.getElementById('greeting').textContent = message;
+      document.getElementById('greeting').style.display = "flex";
+      canvas.style.display = "block";
+      bell.play();
+      for (let i = 0; i < 200; i++) {
+        particles.push({
+          x: canvas.width/2,
+          y: canvas.height/2,
+          angle: Math.random()*2*Math.PI,
+          speed: Math.random()*6+2,
+          radius: 2,
+          life: 100
+        });
+      }
+      animateFireworks();
+      setTimeout(() => {
+        document.getElementById('greeting').style.display = "none";
+        canvas.style.display = "none";
+        particles = [];
+      }, 10000);
+    }
+
+    function animateFireworks() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += Math.cos(p.angle)*p.speed;
+        p.y += Math.sin(p.angle)*p.speed;
+        p.life--;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+        ctx.fillStyle = `hsl(${Math.random()*360},100%,60%)`;
+        ctx.fill();
+      });
+      particles = particles.filter(p=>p.life>0);
+      if (particles.length) requestAnimationFrame(animateFireworks);
+    }
   </script>
 </body>
 </html>
-
-
