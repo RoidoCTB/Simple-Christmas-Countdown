@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Holiday Countdown</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Kit -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -92,7 +91,7 @@
 </head>
 <body class="main-container relative w-full p-4">
     <!-- Snowflakes container -->
-    <div id="snowflakes-container" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0"></div>
+    <canvas id="snowflakes-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0"></canvas>
 
     <div class="z-10 w-full max-w-5xl mx-auto">
         <header class="text-center my-10">
@@ -146,6 +145,20 @@
         </main>
         
         <!-- Message Modal -->
+        <template id="countdown-card-template">
+            <div class="custom-countdown-card countdown-box rounded-2xl p-6 flex flex-col items-center text-center">
+                <button class="delete-btn" data-id="">&times;</button>
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-3xl text-yellow-400">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </span>
+                    <h2 class="text-xl font-bold text-yellow-400"></h2>
+                </div>
+                <div class="custom-countdown-timer flex flex-wrap justify-center gap-4 text-white" data-date=""></div>
+                <p class="text-gray-400 mt-4 text-sm"></p>
+            </div>
+        </template>
+
         <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
             <div class="bg-gray-800 rounded-2xl p-8 text-center max-w-sm mx-auto shadow-2xl">
                 <h3 id="modal-title" class="text-2xl font-bold text-white mb-4"></h3>
@@ -168,18 +181,65 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const snowflakesContainer = document.getElementById('snowflakes-container');
-            const snowflakeCount = 50;
+            // --- Constants ---
+            const STORAGE_KEYS = {
+                CUSTOM_COUNTDOWNS: 'customCountdowns',
+                HIDDEN_DEFAULTS: 'hiddenDefaults'
+            };
+            const DEFAULT_ICON = 'fa-solid fa-calendar-days';
+
+            // --- Canvas Snowflakes ---
+            const canvas = document.getElementById('snowflakes-canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const snowflakeCount = 100;
+            const snowflakes = [];
+
             for (let i = 0; i < snowflakeCount; i++) {
-                const snowflake = document.createElement('div');
-                snowflake.innerHTML = '❄️';
-                snowflake.classList.add('snowflake');
-                snowflake.style.left = `${Math.random() * 100}vw`;
-                snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
-                snowflake.style.animationDelay = `${Math.random() * 5}s`;
-                snowflake.style.opacity = Math.random();
-                snowflakesContainer.appendChild(snowflake);
+                snowflakes.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 3 + 1,
+                    speed: Math.random() * 2 + 1,
+                    opacity: Math.random() * 0.5 + 0.5
+                });
             }
+
+            function drawSnowflakes() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                snowflakes.forEach(flake => {
+                    flake.y += flake.speed;
+                    if (flake.y > canvas.height) { flake.y = -5; flake.x = Math.random() * canvas.width; }
+                    ctx.moveTo(flake.x, flake.y);
+                    ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                });
+                ctx.fill();
+                requestAnimationFrame(drawSnowflakes);
+            }
+
+            function throttle(func, limit) {
+                let inThrottle;
+                return function() {
+                    const args = arguments;
+                    const context = this;
+                    if (!inThrottle) {
+                        func.apply(context, args);
+                        inThrottle = true;
+                        setTimeout(() => inThrottle = false, limit);
+                    }
+                }
+            }
+
+            const handleResize = () => {
+                 canvas.width = window.innerWidth;
+                 canvas.height = window.innerHeight;
+            };
+            window.addEventListener('resize', throttle(handleResize, 100)); // Throttle to run at most every 100ms
 
             const christmasCard = document.getElementById('christmas-card');
             const newYearCard = document.getElementById('new-year-card');
@@ -187,6 +247,7 @@
             const newYearCountdownEl = document.getElementById('new-year-countdown');
             const countdownGrid = document.getElementById('countdown-grid');
             
+            const countdownCardTemplate = document.getElementById('countdown-card-template');
             const addCustomBtn = document.getElementById('add-custom-countdown');
             const customTitleInput = document.getElementById('custom-title');
             const customDateInput = document.getElementById('custom-date');
@@ -202,11 +263,11 @@
             const iconSelectorModal = document.getElementById('icon-selector-modal');
             const iconModalClose = document.getElementById('icon-modal-close');
             const iconGrid = document.getElementById('icon-grid');
-            let selectedIcon = 'fa-solid fa-calendar-days'; // Default icon
+            let selectedIcon = DEFAULT_ICON;
 
             const availableIcons = [
                 'fa-solid fa-cake-candles', 'fa-solid fa-plane', 'fa-solid fa-graduation-cap', 'fa-solid fa-heart',
-                'fa-solid fa-star', 'fa-solid fa-house', 'fa-solid fa-briefcase', 'fa-solid fa-car',
+                'fa-solid fa-star', 'fa-solid fa-house', 'fa-solid fa-briefcase', 'fa-solid fa-car', 'fa-solid fa-calendar-days',
                 'fa-solid fa-music', 'fa-solid fa-gamepad', 'fa-solid fa-book', 'fa-solid fa-film',
                 'fa-solid fa-sun', 'fa-solid fa-moon', 'fa-solid fa-tree', 'fa-solid fa-umbrella-beach',
                 'fa-solid fa-gift', 'fa-solid fa-bell', 'fa-solid fa-ghost', 'fa-solid fa-candle-holder'
@@ -214,8 +275,8 @@
 
             let customCountdowns = JSON.parse(localStorage.getItem('customCountdowns')) || [];
             let hiddenDefaults = JSON.parse(localStorage.getItem('hiddenDefaults')) || [];
-            let intervalId;
 
+            let intervalId;
             function checkHiddenDefaults() {
                 christmasCard.style.display = hiddenDefaults.includes('christmas') ? 'none' : 'flex';
                 newYearCard.style.display = hiddenDefaults.includes('new-year') ? 'none' : 'flex';
@@ -228,7 +289,7 @@
             }
 
             function saveAndRenderCustom() {
-                localStorage.setItem('customCountdowns', JSON.stringify(customCountdowns));
+                localStorage.setItem(STORAGE_KEYS.CUSTOM_COUNTDOWNS, JSON.stringify(customCountdowns));
                 renderCustomCountdowns();
             }
             
@@ -237,51 +298,57 @@
 
                 customCountdowns.forEach(countdown => {
                     const formattedDate = new Date(countdown.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                    const card = document.createElement('div');
-                    card.className = 'custom-countdown-card countdown-box rounded-2xl p-6 flex flex-col items-center text-center';
+                    const card = countdownCardTemplate.content.cloneNode(true).firstElementChild;
+                    
                     card.dataset.id = countdown.id;
-                    card.innerHTML = `
-                        <button class="delete-btn" data-id="${countdown.id}">&times;</button>
-                        <div class="flex items-center gap-3 mb-4">
-                            <span class="text-3xl text-yellow-400"><i class="${countdown.icon || 'fa-solid fa-calendar-days'}"></i></span>
-                            <h2 class="text-xl font-bold text-yellow-400">${countdown.title}</h2>
-                        </div>
-                        <div class="custom-countdown-timer flex flex-wrap justify-center gap-4 text-white" data-date="${countdown.date}"></div>
-                        <p class="text-gray-400 mt-4 text-sm">TO ${formattedDate.toUpperCase()}</p>`;
+                    card.querySelector('.delete-btn').dataset.id = countdown.id;
+                    card.querySelector('h2').textContent = countdown.title;
+                    card.querySelector('i').className = countdown.icon || DEFAULT_ICON;
+                    card.querySelector('.custom-countdown-timer').dataset.date = countdown.date;
+                    card.querySelector('.text-sm').textContent = `TO ${formattedDate.toUpperCase()}`;
+
                     countdownGrid.appendChild(card);
                 });
             }
 
-            function updateAllCountdowns() {
+            function updateCountdown(targetDate, element, finishedMessage, title = '') {
                 const now = new Date().getTime();
-                
+                const distance = targetDate - now;
+
+                if (distance > 0) {
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    element.innerHTML = createTimeBlock(days, 'Days') + createTimeBlock(hours, 'Hours') + createTimeBlock(minutes, 'Mins') + createTimeBlock(seconds, 'Secs');
+                } else {
+                    element.innerHTML = finishedMessage.replace('{title}', title);
+                }
+            }
+
+            function updateAllCountdowns() {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+
                 if (!hiddenDefaults.includes('christmas')) {
-                    const currentYear = new Date().getFullYear();
-                    let christmasDate = new Date(`December 25, ${currentYear} 00:00:00`).getTime();
-                    if (now > christmasDate) { christmasDate = new Date(`December 25, ${currentYear + 1} 00:00:00`).getTime(); }
-                    const d = christmasDate - now;
-                    if (d > 0) {
-                        christmasCountdownEl.innerHTML = createTimeBlock(Math.floor(d/(1000*60*60*24)),'Days')+createTimeBlock(Math.floor((d%(1000*60*60*24))/(1000*60*60)),'Hours')+createTimeBlock(Math.floor((d%(1000*60*60))/(1000*60)),'Mins')+createTimeBlock(Math.floor((d%(1000*60))/1000),'Secs');
-                    } else { christmasCountdownEl.innerHTML = `<div class="text-2xl font-bold text-green-400">Merry Christmas! 🎄</div>`; }
+                    let christmasDate = new Date(currentYear, 11, 25); // Month is 0-indexed
+                    if (now > christmasDate) {
+                        christmasDate.setFullYear(currentYear + 1);
+                    }
+                    updateCountdown(christmasDate.getTime(), christmasCountdownEl, `<div class="text-2xl font-bold text-green-400">Merry Christmas! 🎄</div>`);
                 }
 
                  if (!hiddenDefaults.includes('new-year')) {
-                    const currentYear = new Date().getFullYear();
-                    const newYearDate = new Date(`January 1, ${currentYear + 1} 00:00:00`).getTime();
-                    const d = newYearDate - now;
-                    if (d > 0) {
-                        newYearCountdownEl.innerHTML = createTimeBlock(Math.floor(d/(1000*60*60*24)),'Days')+createTimeBlock(Math.floor((d%(1000*60*60*24))/(1000*60*60)),'Hours')+createTimeBlock(Math.floor((d%(1000*60*60))/(1000*60)),'Mins')+createTimeBlock(Math.floor((d%(1000*60))/1000),'Secs');
-                    } else { newYearCountdownEl.innerHTML = `<div class="text-2xl font-bold text-blue-400">Happy New Year! 🎉</div>`; }
+                    const newYearDate = new Date(currentYear + 1, 0, 1);
+                    updateCountdown(newYearDate.getTime(), newYearCountdownEl, `<div class="text-2xl font-bold text-blue-400">Happy New Year! 🎉</div>`);
                 }
 
                 document.querySelectorAll('.custom-countdown-timer').forEach(timer => {
                     const targetDate = parseInt(timer.dataset.date);
-                    const d = targetDate - now;
                     const card = timer.closest('.custom-countdown-card');
                     const title = card.querySelector('h2').textContent;
-                    if (d > 0) {
-                        timer.innerHTML = createTimeBlock(Math.floor(d/(1000*60*60*24)),'Days')+createTimeBlock(Math.floor((d%(1000*60*60*24))/(1000*60*60)),'Hours')+createTimeBlock(Math.floor((d%(1000*60*60))/(1000*60)),'Mins')+createTimeBlock(Math.floor((d%(1000*60))/1000),'Secs');
-                    } else { timer.innerHTML = `<div class="text-2xl font-bold text-yellow-400">The time for ${title} is here! ✨</div>`; }
+                    const finishedMessage = `<div class="text-2xl font-bold text-yellow-400">The time for {title} is here! ✨</div>`;
+                    updateCountdown(targetDate, timer, finishedMessage, title);
                 });
             }
             
@@ -296,15 +363,19 @@
             addCustomBtn.addEventListener('click', () => {
                 const title = customTitleInput.value.trim();
                 const date = customDateInput.value;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Set to the beginning of today
+
                 if (!title || !date) { showModal('Oops!', 'Please enter both an event name and a date.'); return; }
                 const target = new Date(`${date}T00:00:00`).getTime();
-                if (target <= new Date().getTime()) { showModal('Invalid Date', 'Please select a date in the future.'); return; }
+                if (target < today.getTime()) { showModal('Invalid Date', 'Please select a date in the future.'); return; }
+
                 customCountdowns.push({ id: Date.now(), title: title, date: target, icon: selectedIcon });
                 saveAndRenderCustom();
                 customTitleInput.value = '';
                 customDateInput.value = '';
-                selectedIcon = 'fa-solid fa-calendar-days'; // Reset to default
-                iconSelectorBtn.innerHTML = `<i class="${selectedIcon}"></i>`;
+                selectedIcon = DEFAULT_ICON; // Reset to default
+                iconSelectorBtn.innerHTML = `<i class="${DEFAULT_ICON}"></i>`;
             });
 
             countdownGrid.addEventListener('click', (e) => {
@@ -314,7 +385,7 @@
                     if (id === 'christmas' || id === 'new-year') {
                         if (!hiddenDefaults.includes(id)) {
                             hiddenDefaults.push(id);
-                            localStorage.setItem('hiddenDefaults', JSON.stringify(hiddenDefaults));
+                            localStorage.setItem(STORAGE_KEYS.HIDDEN_DEFAULTS, JSON.stringify(hiddenDefaults));
                             checkHiddenDefaults();
                         }
                     } else {
@@ -326,7 +397,7 @@
 
             restoreDefaultsBtn.addEventListener('click', () => {
                 hiddenDefaults = [];
-                localStorage.removeItem('hiddenDefaults');
+                localStorage.removeItem(STORAGE_KEYS.HIDDEN_DEFAULTS);
                 checkHiddenDefaults();
                 showModal('Restored!', 'Default countdowns have been restored.');
             });
@@ -335,35 +406,43 @@
             function populateIconGrid() {
                 iconGrid.innerHTML = '';
                 availableIcons.forEach(iconClass => {
-                    const iconEl = document.createElement('div');
-                    iconEl.className = 'icon-item';
-                    iconEl.innerHTML = `<i class="${iconClass}"></i>`;
-                    iconEl.addEventListener('click', () => {
-                        selectedIcon = iconClass;
-                        iconSelectorBtn.innerHTML = `<i class="${iconClass}"></i>`;
-                        iconSelectorModal.classList.add('hidden');
-                    });
-                    iconGrid.appendChild(iconEl);
+                    const iconWrapper = document.createElement('div');
+                    iconWrapper.className = 'icon-item';
+                    iconWrapper.dataset.icon = iconClass;
+                    iconWrapper.innerHTML = `<i class="${iconClass}" style="pointer-events: none;"></i>`;
+                    iconGrid.appendChild(iconWrapper);
                 });
             }
 
             iconSelectorBtn.addEventListener('click', () => iconSelectorModal.classList.remove('hidden'));
             iconModalClose.addEventListener('click', () => iconSelectorModal.classList.add('hidden'));
-            iconSelectorModal.addEventListener('click', (e) => {
-                if (e.target === iconSelectorModal) { // Close if clicking on background
+            
+            iconGrid.addEventListener('click', (e) => {
+                const targetIcon = e.target.closest('.icon-item');
+                if (targetIcon && targetIcon.dataset.icon) {
+                    selectedIcon = targetIcon.dataset.icon;
+                    iconSelectorBtn.innerHTML = `<i class="${selectedIcon}"></i>`;
                     iconSelectorModal.classList.add('hidden');
                 }
             });
 
-            // Initial setup
-            populateIconGrid();
-            checkHiddenDefaults();
-            renderCustomCountdowns();
-            updateAllCountdowns();
-            intervalId = setInterval(updateAllCountdowns, 1000);
+            iconSelectorModal.addEventListener('click', (e) => {
+                if (e.target === iconSelectorModal) {
+                    iconSelectorModal.classList.add('hidden');
+                }
+            });
+
+            function init() {
+                populateIconGrid();
+                checkHiddenDefaults();
+                renderCustomCountdowns();
+                updateAllCountdowns();
+                drawSnowflakes();
+                intervalId = setInterval(updateAllCountdowns, 1000);
+            }
+
+            init();
         });
     </script>
 </body>
 </html>
-
-
