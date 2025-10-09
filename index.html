@@ -1,296 +1,369 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Paskong Pinoy Countdown 🎄</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card: #111827;
-      --accent: #16a34a;
-      --accent-2: #dc2626;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-    }
-    body { background: radial-gradient(1200px 700px at 70% -10%, #1f2937, #0b1225 60%, #050816); color: var(--text); overflow-x: hidden; }
-    .glass {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .count-value { font-size: clamp(2.25rem, 5vw, 4rem); font-weight: 800; letter-spacing: 0.5px; }
-    .count-label { color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px; }
-    .badge-ber { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
-    .parol { position: absolute; right: 1rem; top: 0.25rem; font-size: 1.5rem; opacity: .8; filter: drop-shadow(0 0 6px rgba(255,255,255,.25)); }
-    .twinkle { position: fixed; pointer-events: none; inset: 0; overflow: hidden; z-index: 0; }
-    .twinkle span { position: absolute; width: 2px; height: 2px; background: #fff; opacity: .7; border-radius: 50%; animation: twinkle 6s infinite ease-in-out; }
-    @keyframes twinkle { 0%,100%{opacity:.15; transform: scale(.8)} 50%{opacity:.9; transform: scale(1.3)} }
-
-    /* Snowflakes ❄️ */
-    .snowflake {
-      position: fixed;
-      top: -10px;
-      color: #fff;
-      font-size: 1em;
-      user-select: none;
-      pointer-events: none;
-      animation: fall linear infinite;
-      z-index: 2;
-    }
-    @keyframes fall {
-      0% { transform: translateY(-10px); opacity: 1; }
-      100% { transform: translateY(100vh); opacity: 0; }
-    }
-
-    /* Fireworks container 🎆 */
-    #fireworks {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 1000;
-      display: none;
-    }
-    #greeting {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 3rem;
-      font-weight: 800;
-      color: #fff;
-      text-shadow: 0 0 15px #ff0, 0 0 25px #f00;
-      z-index: 1001;
-      display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holiday Countdown</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Kit -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .main-container {
+            background: linear-gradient(170deg, #10121c 0%, #0a0a0a 100%);
+            min-height: 100vh;
+        }
+        .countdown-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative; /* For positioning delete button */
+        }
+        .countdown-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .time-block {
+            min-width: 90px;
+        }
+        .time-value {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.3);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.2s ease;
+            border: none;
+            line-height: 1;
+        }
+        .delete-btn:hover {
+            background: rgba(255, 0, 0, 0.6);
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        /* Icon Selector Styles */
+        #icon-selector-modal .icon-item {
+            cursor: pointer;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+        #icon-selector-modal .icon-item:hover {
+            transform: scale(1.2);
+            color: #c084fc; /* purple-400 */
+        }
+        /* Snowflake animation */
+        .snowflake {
+            color: #fff;
+            font-size: 1.5em;
+            position: absolute;
+            top: -10%;
+            z-index: 1;
+            user-select: none;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(105vh);
+            }
+        }
+    </style>
 </head>
-<body>
-  <!-- Decorative twinkles -->
-  <div class="twinkle" aria-hidden="true"></div>
+<body class="main-container relative w-full p-4">
+    <!-- Snowflakes container -->
+    <div id="snowflakes-container" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0"></div>
 
-  <nav class="navbar navbar-dark glass sticky-top">
-    <div class="container py-2 d-flex justify-content-between align-items-center">
-      <span class="navbar-brand fw-bold">Paskong Pinoy Countdown</span>
-      <div>
-        <button id="music-toggle" class="btn btn-sm btn-outline-light me-2">🎵 Play Music</button>
-        <span class="badge badge-ber rounded-pill px-3 py-2">🎄 Christmas vibes are here ✨</span>
-      </div>
-    </div>
-  </nav>
-
-  <main class="container my-5 position-relative">
-    <div class="position-absolute parol">🧑‍🎄🎄⭐</div>
-
-    <div class="text-center mb-4">
-      <h1 class="fw-bold">How many days till…</h1>
-      <p class="text-secondary mb-0">(Auto-uses <span class="fw-semibold">Asia/Manila</span> time)</p>
-    </div>
-
-    <div class="row g-4">
-      <!-- Christmas Day -->
-      <div class="col-12 col-lg-6">
-        <div class="card glass h-100 shadow-lg">
-          <div class="card-body text-center p-4">
-            <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
-              <span class="badge bg-danger">Christmas Day</span>
-              <small id="xmas-year" class="text-secondary"></small>
+    <div class="z-10 w-full max-w-5xl mx-auto">
+        <header class="text-center my-10">
+            <h1 class="text-4xl md:text-5xl font-black text-white tracking-tight">How many days till...</h1>
+            <div class="flex justify-center items-center gap-4 mt-2">
+                <p class="text-gray-400">All countdowns are based on your local time.</p>
+                <button id="restore-defaults" class="text-sm text-purple-400 hover:text-purple-300 underline">Restore Defaults</button>
             </div>
-            <div id="xmas-count" class="count-value">—</div>
-            <div class="count-label">to December 25</div>
-            <div id="xmas-sub" class="mt-3 text-secondary small"></div>
-          </div>
-        </div>
-      </div>
+        </header>
 
-      <!-- New Year -->
-      <div class="col-12 col-lg-6">
-        <div class="card glass h-100 shadow-lg">
-          <div class="card-body text-center p-4">
-            <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
-              <span class="badge bg-primary">New Year</span>
-              <small id="ny-year" class="text-secondary"></small>
+        <main id="countdown-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Christmas Countdown -->
+            <div id="christmas-card" class="countdown-box rounded-2xl p-6 flex flex-col items-center text-center">
+                <button class="delete-btn" data-id="christmas">&times;</button>
+                <div class="flex items-center gap-3 mb-4">
+                     <span class="text-2xl">🎄</span>
+                    <h2 class="text-xl font-bold text-red-400">Christmas Day</h2>
+                </div>
+                <div id="christmas-countdown" class="flex flex-wrap justify-center gap-4 text-white"></div>
+                <p class="text-gray-400 mt-4 text-sm">TO DECEMBER 25</p>
             </div>
-            <div id="ny-count" class="count-value">—</div>
-            <div class="count-label">to January 1</div>
-            <div id="ny-sub" class="mt-3 text-secondary small"></div>
-          </div>
+
+            <!-- New Year Countdown -->
+            <div id="new-year-card" class="countdown-box rounded-2xl p-6 flex flex-col items-center text-center">
+                 <button class="delete-btn" data-id="new-year">&times;</button>
+                 <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl">🎉</span>
+                    <h2 class="text-xl font-bold text-blue-400">New Year's Day</h2>
+                </div>
+                <div id="new-year-countdown" class="flex flex-wrap justify-center gap-4 text-white"></div>
+                 <p class="text-gray-400 mt-4 text-sm">TO JANUARY 1</p>
+            </div>
+
+            <!-- Custom Countdown Creator -->
+            <div class="countdown-box rounded-2xl p-6 flex flex-col items-center text-center bg-white/10">
+                 <div class="flex items-center gap-3 mb-4">
+                     <span class="text-2xl">✨</span>
+                    <h2 class="text-xl font-bold text-purple-400">Create Your Own</h2>
+                </div>
+                <div class="w-full flex flex-col gap-4">
+                    <div class="flex gap-4">
+                        <button id="icon-selector-btn" class="w-1/4 bg-gray-900/50 border border-gray-700 rounded-lg py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-center text-2xl flex justify-center items-center">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </button>
+                        <input type="text" id="custom-title" placeholder="Event (e.g., Birthday)" class="w-3/4 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <input type="date" id="custom-date" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500" style="color-scheme: dark;">
+                    <button id="add-custom-countdown" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Add Countdown</button>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Message Modal -->
+        <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+            <div class="bg-gray-800 rounded-2xl p-8 text-center max-w-sm mx-auto shadow-2xl">
+                <h3 id="modal-title" class="text-2xl font-bold text-white mb-4"></h3>
+                <p id="modal-message" class="text-gray-300 mb-6"></p>
+                <button id="modal-close" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Close</button>
+            </div>
         </div>
-      </div>
+
+        <!-- Icon Selector Modal -->
+        <div id="icon-selector-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+            <div class="bg-gray-800 rounded-2xl p-6 text-center max-w-md mx-auto shadow-2xl relative">
+                <button id="icon-modal-close" class="absolute top-2 right-3 text-2xl text-gray-400 hover:text-white">&times;</button>
+                <h3 class="text-xl font-bold text-white mb-6">Choose an Icon</h3>
+                <div id="icon-grid" class="grid grid-cols-6 gap-6 text-2xl text-gray-300">
+                    <!-- Icons will be populated by JS -->
+                </div>
+            </div>
+        </div>
     </div>
-  </main>
 
-  <!-- Fireworks + Greeting -->
-  <canvas id="fireworks"></canvas>
-  <div id="greeting">🎉 Maligayang Pasko! 🎉</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const snowflakesContainer = document.getElementById('snowflakes-container');
+            const snowflakeCount = 50;
+            for (let i = 0; i < snowflakeCount; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.innerHTML = '❄️';
+                snowflake.classList.add('snowflake');
+                snowflake.style.left = `${Math.random() * 100}vw`;
+                snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                snowflake.style.animationDelay = `${Math.random() * 5}s`;
+                snowflake.style.opacity = Math.random();
+                snowflakesContainer.appendChild(snowflake);
+            }
 
-  <!-- Music -->
-  <audio id="bg-music" loop>
-  <source src="christmas.mp3" type="audio/mpeg">
-</audio>
+            const christmasCard = document.getElementById('christmas-card');
+            const newYearCard = document.getElementById('new-year-card');
+            const christmasCountdownEl = document.getElementById('christmas-countdown');
+            const newYearCountdownEl = document.getElementById('new-year-countdown');
+            const countdownGrid = document.getElementById('countdown-grid');
+            
+            const addCustomBtn = document.getElementById('add-custom-countdown');
+            const customTitleInput = document.getElementById('custom-title');
+            const customDateInput = document.getElementById('custom-date');
+            
+            const messageModal = document.getElementById('message-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const modalClose = document.getElementById('modal-close');
+            const restoreDefaultsBtn = document.getElementById('restore-defaults');
 
+            // Icon Selector Elements
+            const iconSelectorBtn = document.getElementById('icon-selector-btn');
+            const iconSelectorModal = document.getElementById('icon-selector-modal');
+            const iconModalClose = document.getElementById('icon-modal-close');
+            const iconGrid = document.getElementById('icon-grid');
+            let selectedIcon = 'fa-solid fa-calendar-days'; // Default icon
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // Utility: Manila time
-    function nowInTZ(tz) {
-      const str = new Date().toLocaleString('en-US', { timeZone: tz });
-      return new Date(str);
-    }
-    function inTZ(tz, y, m, d, hh=0, mm=0, ss=0) {
-      const str = new Date(y, m-1, d, hh, mm, ss).toLocaleString('en-US', { timeZone: tz });
-      return new Date(str);
-    }
-    function pad(n){ return String(n).padStart(2,'0'); }
-    function diffBreakdown(ms) {
-      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-      const days = Math.floor(totalSeconds / 86400);
-      const hours = Math.floor((totalSeconds % 86400) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-      return { days, hours, minutes, seconds };
-    }
-    function fmt({days, hours, minutes, seconds}) {
-      return `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
-    }
-    function plural(n, w){ return n === 1 ? w : w + 's'; }
-    function subText({days, hours, minutes, seconds}){
-      const parts = [];
-      if (days) parts.push(`${days} ${plural(days,'day')}`);
-      if (hours) parts.push(`${hours} ${plural(hours,'hour')}`);
-      if (minutes && parts.length < 2) parts.push(`${minutes} ${plural(minutes,'minute')}`);
-      if (!parts.length) parts.push(`${seconds} ${plural(seconds,'second')}`);
-      return parts.join(', ') + ' left';
-    }
+            const availableIcons = [
+                'fa-solid fa-cake-candles', 'fa-solid fa-plane', 'fa-solid fa-graduation-cap', 'fa-solid fa-heart',
+                'fa-solid fa-star', 'fa-solid fa-house', 'fa-solid fa-briefcase', 'fa-solid fa-car',
+                'fa-solid fa-music', 'fa-solid fa-gamepad', 'fa-solid fa-book', 'fa-solid fa-film',
+                'fa-solid fa-sun', 'fa-solid fa-moon', 'fa-solid fa-tree', 'fa-solid fa-umbrella-beach',
+                'fa-solid fa-gift', 'fa-solid fa-bell', 'fa-solid fa-ghost', 'fa-solid fa-candle-holder'
+            ];
 
-    // Twinkles
-    (function twinkles(){
-      const wrap = document.querySelector('.twinkle');
-      const N = 80;
-      for (let i=0;i<N;i++){
-        const s = document.createElement('span');
-        s.style.left = Math.random()*100 + '%';
-        s.style.top = Math.random()*100 + '%';
-        s.style.animationDelay = (Math.random()*6).toFixed(2) + 's';
-        s.style.transform = `scale(${0.5 + Math.random()*1.5})`;
-        wrap.appendChild(s);
-      }
-    })();
+            let customCountdowns = JSON.parse(localStorage.getItem('customCountdowns')) || [];
+            let hiddenDefaults = JSON.parse(localStorage.getItem('hiddenDefaults')) || [];
+            let intervalId;
 
-    // Snowflakes ❄️
-    function createSnowflake() {
-      const snowflake = document.createElement('div');
-      snowflake.className = 'snowflake';
-      snowflake.textContent = '❄';
-      snowflake.style.left = Math.random() * 100 + 'vw';
-      snowflake.style.fontSize = Math.random() * 1.5 + 0.5 + 'em';
-      snowflake.style.animationDuration = (5 + Math.random() * 10) + 's';
-      document.body.appendChild(snowflake);
-      setTimeout(() => snowflake.remove(), 15000);
-    }
-    setInterval(createSnowflake, 300);
+            function checkHiddenDefaults() {
+                christmasCard.style.display = hiddenDefaults.includes('christmas') ? 'none' : 'flex';
+                newYearCard.style.display = hiddenDefaults.includes('new-year') ? 'none' : 'flex';
+            }
 
-    const TZ = 'Asia/Manila';
-    let triggeredXmas = false, triggeredNY = false;
+            function formatTime(time) { return time < 10 ? `0${time}` : time; }
+            
+            function createTimeBlock(value, label) {
+                return `<div class="time-block text-center"><div class="time-value text-5xl font-black">${formatTime(value)}</div><div class="text-xs uppercase text-gray-400 mt-1">${label}</div></div>`;
+            }
 
-    function targets() {
-      const now = nowInTZ(TZ);
-      const y = now.getFullYear();
-      let xmas = inTZ(TZ, y, 12, 25, 0, 0, 0);
-      if (now > xmas) xmas = inTZ(TZ, y+1, 12, 25, 0, 0, 0);
-      let ny = inTZ(TZ, y+1, 1, 1, 0, 0, 0);
-      const jan1ThisYear = inTZ(TZ, y, 1, 1, 0, 0, 0);
-      if (now < jan1ThisYear) ny = jan1ThisYear;
-      return { now, xmas, ny };
-    }
+            function saveAndRenderCustom() {
+                localStorage.setItem('customCountdowns', JSON.stringify(customCountdowns));
+                renderCustomCountdowns();
+            }
+            
+            function renderCustomCountdowns() {
+                document.querySelectorAll('.custom-countdown-card').forEach(card => card.remove());
 
-    function update() {
-      const { now, xmas, ny } = targets();
-      document.getElementById('xmas-year').textContent = `(${xmas.getFullYear()})`;
-      document.getElementById('ny-year').textContent = `(${ny.getFullYear()})`;
-      const dXmas = diffBreakdown(xmas - now);
-      const dNY = diffBreakdown(ny - now);
-      document.getElementById('xmas-count').textContent = fmt(dXmas);
-      document.getElementById('ny-count').textContent = fmt(dNY);
-      document.getElementById('xmas-sub').textContent = subText(dXmas);
-      document.getElementById('ny-sub').textContent = subText(dNY);
+                customCountdowns.forEach(countdown => {
+                    const formattedDate = new Date(countdown.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    const card = document.createElement('div');
+                    card.className = 'custom-countdown-card countdown-box rounded-2xl p-6 flex flex-col items-center text-center';
+                    card.dataset.id = countdown.id;
+                    card.innerHTML = `
+                        <button class="delete-btn" data-id="${countdown.id}">&times;</button>
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-3xl text-yellow-400"><i class="${countdown.icon || 'fa-solid fa-calendar-days'}"></i></span>
+                            <h2 class="text-xl font-bold text-yellow-400">${countdown.title}</h2>
+                        </div>
+                        <div class="custom-countdown-timer flex flex-wrap justify-center gap-4 text-white" data-date="${countdown.date}"></div>
+                        <p class="text-gray-400 mt-4 text-sm">TO ${formattedDate.toUpperCase()}</p>`;
+                    countdownGrid.appendChild(card);
+                });
+            }
 
-      // 🎉 Trigger greeting + fireworks
-      if (dXmas.days===0 && dXmas.hours===0 && dXmas.minutes===0 && dXmas.seconds===0 && !triggeredXmas) {
-        triggeredXmas = true;
-        launchCelebration("🎄 Maligayang Pasko! 🎄");
-      }
-      if (dNY.days===0 && dNY.hours===0 && dNY.minutes===0 && dNY.seconds===0 && !triggeredNY) {
-        triggeredNY = true;
-        launchCelebration("🎆 Happy New Year! 🎆");
-      }
-    }
-    update();
-    setInterval(update, 1000);
+            function updateAllCountdowns() {
+                const now = new Date().getTime();
+                
+                if (!hiddenDefaults.includes('christmas')) {
+                    const currentYear = new Date().getFullYear();
+                    let christmasDate = new Date(`December 25, ${currentYear} 00:00:00`).getTime();
+                    if (now > christmasDate) { christmasDate = new Date(`December 25, ${currentYear + 1} 00:00:00`).getTime(); }
+                    const d = christmasDate - now;
+                    if (d > 0) {
+                        christmasCountdownEl.innerHTML = createTimeBlock(Math.floor(d/(1000*60*60*24)),'Days')+createTimeBlock(Math.floor((d%(1000*60*60*24))/(1000*60*60)),'Hours')+createTimeBlock(Math.floor((d%(1000*60*60))/(1000*60)),'Mins')+createTimeBlock(Math.floor((d%(1000*60))/1000),'Secs');
+                    } else { christmasCountdownEl.innerHTML = `<div class="text-2xl font-bold text-green-400">Merry Christmas! 🎄</div>`; }
+                }
 
-    // Music 🎵
-    const music = document.getElementById('bg-music');
-    const bell = document.getElementById('bell');
-    document.getElementById('music-toggle').addEventListener('click', () => {
-      if (music.paused) {
-        music.play();
-        document.getElementById('music-toggle').textContent = "⏸ Pause Music";
-      } else {
-        music.pause();
-        document.getElementById('music-toggle').textContent = "🎵 Play Music";
-      }
-    });
+                 if (!hiddenDefaults.includes('new-year')) {
+                    const currentYear = new Date().getFullYear();
+                    const newYearDate = new Date(`January 1, ${currentYear + 1} 00:00:00`).getTime();
+                    const d = newYearDate - now;
+                    if (d > 0) {
+                        newYearCountdownEl.innerHTML = createTimeBlock(Math.floor(d/(1000*60*60*24)),'Days')+createTimeBlock(Math.floor((d%(1000*60*60*24))/(1000*60*60)),'Hours')+createTimeBlock(Math.floor((d%(1000*60*60))/(1000*60)),'Mins')+createTimeBlock(Math.floor((d%(1000*60))/1000),'Secs');
+                    } else { newYearCountdownEl.innerHTML = `<div class="text-2xl font-bold text-blue-400">Happy New Year! 🎉</div>`; }
+                }
 
-    // Fireworks 🎆
-    const canvas = document.getElementById('fireworks');
-    const ctx = canvas.getContext('2d');
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+                document.querySelectorAll('.custom-countdown-timer').forEach(timer => {
+                    const targetDate = parseInt(timer.dataset.date);
+                    const d = targetDate - now;
+                    const card = timer.closest('.custom-countdown-card');
+                    const title = card.querySelector('h2').textContent;
+                    if (d > 0) {
+                        timer.innerHTML = createTimeBlock(Math.floor(d/(1000*60*60*24)),'Days')+createTimeBlock(Math.floor((d%(1000*60*60*24))/(1000*60*60)),'Hours')+createTimeBlock(Math.floor((d%(1000*60*60))/(1000*60)),'Mins')+createTimeBlock(Math.floor((d%(1000*60))/1000),'Secs');
+                    } else { timer.innerHTML = `<div class="text-2xl font-bold text-yellow-400">The time for ${title} is here! ✨</div>`; }
+                });
+            }
+            
+            function showModal(title, message) {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                messageModal.classList.remove('hidden');
+            }
 
-    let particles = [];
-    function launchCelebration(message) {
-      document.getElementById('greeting').textContent = message;
-      document.getElementById('greeting').style.display = "flex";
-      canvas.style.display = "block";
-      bell.play();
-      for (let i = 0; i < 200; i++) {
-        particles.push({
-          x: canvas.width/2,
-          y: canvas.height/2,
-          angle: Math.random()*2*Math.PI,
-          speed: Math.random()*6+2,
-          radius: 2,
-          life: 100
+            modalClose.addEventListener('click', () => messageModal.classList.add('hidden'));
+
+            addCustomBtn.addEventListener('click', () => {
+                const title = customTitleInput.value.trim();
+                const date = customDateInput.value;
+                if (!title || !date) { showModal('Oops!', 'Please enter both an event name and a date.'); return; }
+                const target = new Date(`${date}T00:00:00`).getTime();
+                if (target <= new Date().getTime()) { showModal('Invalid Date', 'Please select a date in the future.'); return; }
+                customCountdowns.push({ id: Date.now(), title: title, date: target, icon: selectedIcon });
+                saveAndRenderCustom();
+                customTitleInput.value = '';
+                customDateInput.value = '';
+                selectedIcon = 'fa-solid fa-calendar-days'; // Reset to default
+                iconSelectorBtn.innerHTML = `<i class="${selectedIcon}"></i>`;
+            });
+
+            countdownGrid.addEventListener('click', (e) => {
+                if (e.target.closest('.delete-btn')) {
+                    const btn = e.target.closest('.delete-btn');
+                    const id = btn.dataset.id;
+                    if (id === 'christmas' || id === 'new-year') {
+                        if (!hiddenDefaults.includes(id)) {
+                            hiddenDefaults.push(id);
+                            localStorage.setItem('hiddenDefaults', JSON.stringify(hiddenDefaults));
+                            checkHiddenDefaults();
+                        }
+                    } else {
+                        customCountdowns = customCountdowns.filter(c => c.id !== parseInt(id));
+                        saveAndRenderCustom();
+                    }
+                }
+            });
+
+            restoreDefaultsBtn.addEventListener('click', () => {
+                hiddenDefaults = [];
+                localStorage.removeItem('hiddenDefaults');
+                checkHiddenDefaults();
+                showModal('Restored!', 'Default countdowns have been restored.');
+            });
+
+            // --- Icon Selector Logic ---
+            function populateIconGrid() {
+                iconGrid.innerHTML = '';
+                availableIcons.forEach(iconClass => {
+                    const iconEl = document.createElement('div');
+                    iconEl.className = 'icon-item';
+                    iconEl.innerHTML = `<i class="${iconClass}"></i>`;
+                    iconEl.addEventListener('click', () => {
+                        selectedIcon = iconClass;
+                        iconSelectorBtn.innerHTML = `<i class="${iconClass}"></i>`;
+                        iconSelectorModal.classList.add('hidden');
+                    });
+                    iconGrid.appendChild(iconEl);
+                });
+            }
+
+            iconSelectorBtn.addEventListener('click', () => iconSelectorModal.classList.remove('hidden'));
+            iconModalClose.addEventListener('click', () => iconSelectorModal.classList.add('hidden'));
+            iconSelectorModal.addEventListener('click', (e) => {
+                if (e.target === iconSelectorModal) { // Close if clicking on background
+                    iconSelectorModal.classList.add('hidden');
+                }
+            });
+
+            // Initial setup
+            populateIconGrid();
+            checkHiddenDefaults();
+            renderCustomCountdowns();
+            updateAllCountdowns();
+            intervalId = setInterval(updateAllCountdowns, 1000);
         });
-      }
-      animateFireworks();
-      setTimeout(() => {
-        document.getElementById('greeting').style.display = "none";
-        canvas.style.display = "none";
-        particles = [];
-      }, 10000);
-    }
-
-    function animateFireworks() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.x += Math.cos(p.angle)*p.speed;
-        p.y += Math.sin(p.angle)*p.speed;
-        p.life--;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
-        ctx.fillStyle = `hsl(${Math.random()*360},100%,60%)`;
-        ctx.fill();
-      });
-      particles = particles.filter(p=>p.life>0);
-      if (particles.length) requestAnimationFrame(animateFireworks);
-    }
-  </script>
+    </script>
 </body>
 </html>
+
+
